@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Xml.Serialization;
 
 namespace cw_2
@@ -12,13 +13,13 @@ namespace cw_2
             string path = "";
             try
             {
-                path = @"C:\Users\kerki\Desktop\APBD\Zajęcia 2\dane.csv";
+                path = @"dane.csv";
             }catch(ArgumentException a)
             {
                 Console.WriteLine("Podana sciezka jest niepoprawna" + a.Message);
             }
-            var result = new List<string[]>();
-            var log = new List<string[]>();
+            var result = new List<Student>();
+            var log = new List<Student>();
             try
             {
                 var fi = new FileInfo(path);
@@ -28,14 +29,29 @@ namespace cw_2
                     while ((line = stream.ReadLine()) != null)
                     {
                         string[] kolumny = line.Split(',');
-                        if (Check(kolumny, result)) result.Add(kolumny);
-                        else log.Add(kolumny);
+                        var student = new Student();
+                        student.fname = kolumny[0];
+                        student.lname = kolumny[1];
+                        student.studiesname = kolumny[2];
+                        student.studiesmode = kolumny[3];
+                        student.indexNumber = "s" + kolumny[4];
+                        student.birthdate = kolumny[5];
+                        student.email = kolumny[6];
+                        student.mothersName = kolumny[7];
+                        student.fathersName = kolumny[8];
+
+
+                        if (Check(kolumny, result)) result.Add(student);
+                        else log.Add(student);
                     }
                     Console.WriteLine(result.Count);
                     Console.WriteLine(log.Count);
                 }
-                FileStream writer = new FileStream(@"łog.txt", FileMode.Create);
-                XmlSerializer serializer = new XmlSerializer(typeof(List<string[]>), new XmlRootAttribute());
+                var jsonString = JsonSerializer.Serialize(result);
+                File.WriteAllText("data.json", jsonString);
+                FileStream writer = new FileStream(@"log.txt", FileMode.Create);
+                XmlSerializer serializer = new XmlSerializer(typeof(List<Student>),
+                                           new XmlRootAttribute("uczelnia"));
                 serializer.Serialize(writer, log);
             }
             catch(FileNotFoundException f)
@@ -43,7 +59,7 @@ namespace cw_2
                 Console.WriteLine("Plik " + path + " nie istnieje " + f.Message);
             }
         }
-        public static bool Check(string[] arr, List<string[]> list)
+        public static bool Check(string[] arr, List<Student> list)
         {
             if (arr.Length != 9) return false;
             for (int i = 0; i < 9; i++)
@@ -53,17 +69,17 @@ namespace cw_2
                     return false;
                 }
             }
-            for(int i = 0; i < list.Count; i++)
+            for (int i = 0; i < list.Count; i++)
             {
-                if (list[i][0] == arr[0] &&
-                    list[i][1] == arr[1] &&
-                    list[i][5] == arr[5]) return false;
+                if (list[i].fname.Equals(arr[0]) &&
+                    list[i].lname.Equals(arr[1]) &&
+                    list[i].indexNumber.Equals("s" + arr[4])) return false; 
             }
             return true;
         }
-        public static void RigthPath(string s)
+        public static void RigthPath(string path)
         {
-            if (s != @"C:\Users\kerki\Desktop\APBD\Zajęcia 2\dane.csv") throw new ArgumentException();
+            if (path != @"dane.csv") throw new ArgumentException();
         }
     }
 }
